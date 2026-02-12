@@ -4,21 +4,21 @@ Continuous Azure Well-Architected Framework compliance validation using AI - aut
 
 ## Overview
 
-Azure governance at scale is complex. Security teams manually review 20+ resource types across multiple subscriptions. Finance can't track costs without tags. Compliance teams spend days cross-referencing WAF standards against actual infrastructure. And critical security gaps—like RDP open to 0.0.0.0/0 or customer-managed encryption disabled—slip through until discovered in audits.
+Azure governance at scale is complex. Security teams manually review many resource types across multiple subscriptions. Finance can't track costs without tags. Compliance teams spend days cross-referencing WAF standards against actual infrastructure. And critical security gaps—like RDP open to 0.0.0.0/0 or customer-managed encryption disabled—slip through until discovered in audits.
 
 This workflow is broken. Enter the **Azure SRE Agent**: an AI-powered compliance engine that discovers all resources, assesses them against all 5 WAF pillars AND your organization's specific standards in minutes, then generates exact remediation commands with quantified impact.
 
 **How it works:**
 
-The agent leverages three capabilities to transform Azure governance:
+The agent leverages four capabilities to transform Azure governance:
 
-1.  **Autonomous Resource Discovery via MCP** - Azure MCP (Model Context Protocol) server exposes Azure Resource Graph and ARM APIs as discoverable tools. The agent automatically inventories all resources across subscriptions with metadata (types, locations, tags, security settings) in seconds.
+**Autonomous Resource Discovery via MCP** - Azure MCP (Model Context Protocol) server exposes Azure Resource Graph and ARM APIs as discoverable tools. The agent automatically inventories all resources across subscriptions with metadata (types, locations, tags, security settings) in seconds.
 
-2.  **Multi-Pillar WAF Assessment** - For each discovered resource, the agent validates against all 5 WAF pillars (Reliability, Security, Cost Optimization, Operational Excellence, Performance) using Azure MCP tools, generating an assessment summary with pass/fail/partial/unknown counts.
+**Multi-Pillar WAF Assessment** - For each discovered resource, the agent validates against all 5 WAF pillars (Reliability, Security, Cost Optimization, Operational Excellence, Performance) using Azure MCP tools, generating an assessment summary with pass/fail/partial/unknown counts.
 
-3.  **Org Best Practices Cross-Check** - The agent references your organization's compliance standards (stored in knowledge base as `org-practices.md`) to escalate WAF findings into actionable org policies. A Security policy violation becomes a critical finding. A cost optimization recommendation becomes a warning.
+**Org Best Practices Cross-Check** - The agent references your organization's compliance standards (stored in knowledge base as `org-practices.md`) to escalate WAF findings into actionable org policies. A Security policy violation becomes a critical finding. A cost optimization recommendation becomes a warning.
 
-4.  **Automated Remediation Codegen** - For every finding, the agent generates exact Azure CLI commands, Terraform snippets, and Portal steps with impact quantification (risk reduction, cost savings, compliance improvement).
+**Automated Remediation Codegen** - For every finding, the agent generates exact Azure CLI commands, Terraform snippets, and Portal steps with impact quantification (risk reduction, cost savings, compliance improvement).
 
 **Real-world example from the image:** The assessment discovered 8 critical findings and 11 warnings across SQL, AKS, Storage, VMs, and NSGs. Each came with remediation commands and prioritized timelines. Total time: **6 minutes**. Manual review would take 4-6 hours.
 
