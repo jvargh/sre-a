@@ -1,3 +1,6 @@
+
+<img width="1760" height="1042" alt="blogimage" src="https://github.com/user-attachments/assets/d3230bca-4f77-48cd-b86a-4dde86b9ca96" />
+
 # Databricks MCP for Azure SRE Agent
 
 Production-ready Databricks MCP server plus SRE Agent assets for proactive compliance and reactive incident response. This repo includes:
