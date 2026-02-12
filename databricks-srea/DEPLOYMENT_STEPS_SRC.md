@@ -4,13 +4,13 @@
 **Status**: ✅ **SUCCESSFULLY DEPLOYED AND TESTED**  
 **Approach**: Build from local `src/` folder (databricks-mcp v0.4.4)  
 **Target**: Azure Container Apps with streamable HTTP transport  
-**Registry**: aks01day2acr.azurecr.io  
-**Resource Group**: aks01day2-rg  
-**Region**: centralus
+**Registry**: <ACR_LOGIN_SERVER>  
+**Resource Group**: <RESOURCE_GROUP>  
+**Region**: <REGION>
 
-**Live Endpoint**: `https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp`  
-**Container Image**: `aks01day2acr.azurecr.io/databricks-mcp:final` (digest: `sha256:bebce83...`)  
-**Container App Revision**: `databricks-mcp--0000004`
+**Live Endpoint**: `https://<CONTAINER_APP_FQDN>/mcp`  
+**Container Image**: `<ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG>` (digest: `<IMAGE_DIGEST>`)  
+**Container App Revision**: `<CONTAINER_APP_REVISION>`
 
 ---
 
@@ -74,7 +74,7 @@ This is safe because ACA provides infrastructure-level isolation.
 *   ✅ Pre-Docker validation completed (all 38 tools working via streamable HTTP)
 *   ✅ Docker Desktop running
 *   Azure CLI logged in (`az login`)
-*   Existing ACR: `aks01day2acr.azurecr.io`
+*   Existing ACR: `<ACR_LOGIN_SERVER>`
 *   Databricks credentials ready:
     *   DATABRICKS\_HOST: `https://<DATABRICKS_HOST>`
   *   DATABRICKS\_TOKEN: `<DATABRICKS_TOKEN>` (⚠️ rotate post-deployment)
@@ -89,9 +89,9 @@ Local Src Folder (databricks-mcp v0.4.4)
     ↓
 Docker Build (copies src/ → /app, installs with uv)
     ↓
-Docker Image (databricks-mcp:0.4.4-src)
+Docker Image (<IMAGE_NAME>:<IMAGE_TAG>)
     ↓
-Azure Container Registry (aks01day2acr.azurecr.io/databricks-mcp:0.4.4-src)
+Azure Container Registry (<ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG>)
     ↓
 Azure Container Apps (with Managed Identity + Secrets)
     ↓
@@ -147,7 +147,7 @@ cd C:\Users\varghesejoji\Desktop\SRE-A\zDatabricksMCP\src
 ### 2.2 Build the Docker Image
 
 ```
-docker build -q -t databricks-mcp:final .
+docker build -q -t <IMAGE_NAME>:<IMAGE_TAG> .
 ```
 
 **Build Process:**
@@ -162,19 +162,19 @@ docker build -q -t databricks-mcp:final .
 **Expected Output:**
 
 ```
-sha256:fbd67ce60ae97ef69cfc1fe59e8f3f331e05752d6441c53e0f20a063e50a5ee1
+sha256:<IMAGE_DIGEST>
 ```
 
 ### 2.3 Verify Image Creation
 
 ```
-docker images | Select-String "databricks-mcp"
+docker images | Select-String "<IMAGE_NAME>"
 ```
 
 **Expected Output:**
 
 ```
-databricks-mcp   final   fbd67ce60ae97   2 minutes ago   485MB
+<IMAGE_NAME>   <IMAGE_TAG>   <IMAGE_DIGEST_SHORT>   2 minutes ago   485MB
 ```
 
 ---
@@ -184,13 +184,13 @@ databricks-mcp   final   fbd67ce60ae97   2 minutes ago   485MB
 ### 3.1 Run Container Locally
 
 ```
-docker run -d --name databricks-mcp-test `
+docker run -d --name <LOCAL_CONTAINER_NAME> `
   -p 8000:8000 `
   -e DATABRICKS_HOST="https://<DATABRICKS_HOST>" `
   -e DATABRICKS_TOKEN="<DATABRICKS_TOKEN>" `
   -e DATABRICKS_WAREHOUSE_ID="<DATABRICKS_WAREHOUSE_ID>" `
   -e LOG_LEVEL="INFO" `
-  databricks-mcp:0.4.4-src
+  <IMAGE_NAME>:<IMAGE_TAG>
 ```
 
 ### 3.2 Check Container Logs
@@ -200,7 +200,7 @@ docker run -d --name databricks-mcp-test `
 Start-Sleep -Seconds 5
 
 # View logs
-docker logs databricks-mcp-test
+docker logs <LOCAL_CONTAINER_NAME>
 ```
 
 **Expected Output (JSON logs):**
@@ -289,8 +289,8 @@ Write-Host "✅ Catalogs found: $($catalogs.result.content[0].text)"
 ### 3.5 Clean Up Test Container
 
 ```
-docker stop databricks-mcp-test
-docker rm databricks-mcp-test
+docker stop <LOCAL_CONTAINER_NAME>
+docker rm <LOCAL_CONTAINER_NAME>
 ```
 
 ---
@@ -300,7 +300,7 @@ docker rm databricks-mcp-test
 ### 4.1 Login to ACR
 
 ```
-az acr login --name aks01day2acr
+az acr login --name <ACR_NAME>
 ```
 
 **Expected Output:**
@@ -312,29 +312,29 @@ Login Succeeded
 ### 4.2 Tag Image for ACR
 
 ```
-docker tag databricks-mcp:final aks01day2acr.azurecr.io/databricks-mcp:final
+docker tag <IMAGE_NAME>:<IMAGE_TAG> <ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG>
 ```
 
 ### 4.3 Push to ACR
 
 ```
-docker push aks01day2acr.azurecr.io/databricks-mcp:final
+docker push <ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG>
 ```
 
 **Expected Output:**
 
 ```
-The push refers to repository [aks01day2acr.azurecr.io/databricks-mcp]
+The push refers to repository [<ACR_LOGIN_SERVER>/<IMAGE_NAME>]
 7218afb76b65: Pushed
 1c0ef9ea650d: Pushed
 b58a27b34e67: Pushed
-final: digest: sha256:bebce83051bfe8d24324ff3f9372836bd38e89327a7bfee61d304c0febc0f1e3 size: 2208
+final: digest: sha256:<IMAGE_DIGEST> size: 2208
 ```
 
 ### 4.4 Verify Image in ACR
 
 ```
-az acr repository show --name aks01day2acr --repository databricks-mcp
+az acr repository show --name <ACR_NAME> --repository <IMAGE_NAME>
 ```
 
 ---
@@ -345,17 +345,17 @@ az acr repository show --name aks01day2acr --repository databricks-mcp
 
 ```
 az identity create `
-  --name databricks-mcp-identity `
-  --resource-group aks01day2-rg `
-  --location centralus
+  --name <MANAGED_IDENTITY_NAME> `
+  --resource-group <RESOURCE_GROUP> `
+  --location <REGION>
 ```
 
 ### 5.2 Get Identity Principal ID and Client ID
 
 ```
-$identityId = az identity show --name databricks-mcp-identity --resource-group aks01day2-rg --query id -o tsv
-$principalId = az identity show --name databricks-mcp-identity --resource-group aks01day2-rg --query principalId -o tsv
-$clientId = az identity show --name databricks-mcp-identity --resource-group aks01day2-rg --query clientId -o tsv
+$identityId = az identity show --name <MANAGED_IDENTITY_NAME> --resource-group <RESOURCE_GROUP> --query id -o tsv
+$principalId = az identity show --name <MANAGED_IDENTITY_NAME> --resource-group <RESOURCE_GROUP> --query principalId -o tsv
+$clientId = az identity show --name <MANAGED_IDENTITY_NAME> --resource-group <RESOURCE_GROUP> --query clientId -o tsv
 
 Write-Host "Identity ID: $identityId"
 Write-Host "Principal ID: $principalId"
@@ -365,7 +365,7 @@ Write-Host "Client ID: $clientId"
 ### 5.3 Grant ACR Pull Permission
 
 ```
-$acrId = az acr show --name aks01day2acr --query id -o tsv
+$acrId = az acr show --name <ACR_NAME> --query id -o tsv
 
 az role assignment create `
   --assignee $principalId `
@@ -380,7 +380,7 @@ az role assignment create `
   "principalId": "...",
   "principalType": "ServicePrincipal",
   "roleDefinitionName": "AcrPull",
-  "scope": "/subscriptions/.../resourceGroups/aks01day2-rg/providers/Microsoft.ContainerRegistry/registries/aks01day2acr"
+  "scope": "/subscriptions/.../resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ContainerRegistry/registries/<ACR_NAME>"
 }
 ```
 
@@ -392,9 +392,9 @@ az role assignment create `
 
 ```
 az containerapp env create `
-  --name databricks-mcp-env `
-  --resource-group aks01day2-rg `
-  --location centralus
+  --name <CONTAINER_APP_ENV> `
+  --resource-group <RESOURCE_GROUP> `
+  --location <REGION>
 ```
 
 **Expected Output:**
@@ -407,8 +407,8 @@ Creating Container Apps Environment... (this may take several minutes)
 
 ```
 az containerapp env show `
-  --name databricks-mcp-env `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_ENV> `
+  --resource-group <RESOURCE_GROUP> `
   --query "provisioningState"
 ```
 
@@ -426,11 +426,11 @@ az containerapp env show `
 
 ```
 az containerapp create `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
-  --environment databricks-mcp-env `
-  --image aks01day2acr.azurecr.io/databricks-mcp:final `
-  --registry-server aks01day2acr.azurecr.io `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
+  --environment <CONTAINER_APP_ENV> `
+  --image <ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG> `
+  --registry-server <ACR_LOGIN_SERVER> `
   --registry-identity $identityId `
   --user-assigned $identityId `
   --target-port 8000 `
@@ -451,15 +451,15 @@ az containerapp create `
 **Expected Output:**
 
 ```
-Container app created. Access your app at https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/
+Container app created. Access your app at https://<CONTAINER_APP_FQDN>/
 ```
 
 ### 7.2 Get Container App FQDN
 
 ```
 $fqdn = az containerapp show `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --query "properties.configuration.ingress.fqdn" -o tsv
 
 Write-Host "🌐 Container App URL: https://$fqdn"
@@ -469,8 +469,8 @@ Write-Host "🔗 MCP Endpoint: https://$fqdn/mcp"
 **Output:**
 
 ```
-🌐 Container App URL: https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io
-🔗 MCP Endpoint: https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp
+🌐 Container App URL: https://<CONTAINER_APP_FQDN>
+🔗 MCP Endpoint: https://<CONTAINER_APP_FQDN>/mcp
 ```
 
 ---
@@ -481,8 +481,8 @@ Write-Host "🔗 MCP Endpoint: https://$fqdn/mcp"
 
 ```
 az containerapp show `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --query "{name:name, provisioningState:properties.provisioningState, runningStatus:properties.runningStatus, fqdn:properties.configuration.ingress.fqdn}"
 ```
 
@@ -490,8 +490,8 @@ az containerapp show `
 
 ```
 {
-  "fqdn": "databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io",
-  "name": "databricks-mcp",
+  "fqdn": "<CONTAINER_APP_FQDN>",
+  "name": "<CONTAINER_APP_NAME>",
   "provisioningState": "Succeeded",
   "runningStatus": "Running"
 }
@@ -500,7 +500,7 @@ az containerapp show `
 ### 8.2 Test Remote MCP Endpoint
 
 ```
-$fqdn = az containerapp show --name databricks-mcp --resource-group aks01day2-rg --query "properties.configuration.ingress.fqdn" -o tsv
+$fqdn = az containerapp show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --query "properties.configuration.ingress.fqdn" -o tsv
 
 # Initialize session
 $initPayload = @{
@@ -609,8 +609,8 @@ See [TEST-README.md](TEST-README.md) for detailed test documentation.
 
 ```
 az containerapp logs show `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --tail 50
 ```
 
@@ -631,14 +631,14 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ### 9.1 Get MCP Server URL
 
 ```
-$fqdn = "databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io"
+$fqdn = "<CONTAINER_APP_FQDN>"
 Write-Host "MCP Server URL: https://$fqdn/mcp"
 ```
 
 **Output:**
 
 ```
-MCP Server URL: https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp
+MCP Server URL: https://<CONTAINER_APP_FQDN>/mcp
 ```
 
 ### 9.2 Azure SRE Agent Connector Setup (UI)
@@ -651,7 +651,7 @@ If your Azure SRE Agent has a UI-based MCP connector configuration, use these se
 |---------|-------|
 | **Name** | `DbxMCP` |
 | **Connection type** | `Streamable-HTTP` ✓ |
-| **URL** | `https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp` |
+| **URL** | `https://<CONTAINER_APP_FQDN>/mcp` |
 | **Authentication method** | `Custom headers` |
 
 **⚠️ CRITICAL - Add this custom header:**
@@ -681,7 +681,7 @@ The MCP streamable-http transport requires clients to accept both JSON responses
 
 ```powershell
 # Test the endpoint manually
-$url = "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp"
+$url = "https://<CONTAINER_APP_FQDN>/mcp"
 $headers = @{
     "Accept" = "application/json, text/event-stream"
     "Content-Type" = "application/json"
@@ -720,7 +720,7 @@ If using JSON configuration file (e.g., `subagent.yaml` or agent settings):
 {
   "mcp_servers": {
     "databricks-mcp": {
-      "url": "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp",
+      "url": "https://<CONTAINER_APP_FQDN>/mcp",
       "transport": "streamable-http",
       "description": "Databricks MCP Server for workspace management",
       "headers": {
@@ -754,7 +754,7 @@ Expected agent behavior:
 
 ```
 az monitor metrics list `
-  --resource $(az containerapp show --name databricks-mcp --resource-group aks01day2-rg --query id -o tsv) `
+  --resource $(az containerapp show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --query id -o tsv) `
   --metric "Requests" `
   --start-time (Get-Date).AddHours(-1).ToString("yyyy-MM-ddTHH:mm:ss") `
   --end-time (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss")
@@ -764,8 +764,8 @@ az monitor metrics list `
 
 ```
 az containerapp logs show `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --follow
 ```
 
@@ -773,8 +773,8 @@ az containerapp logs show `
 
 ```
 az containerapp update `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --min-replicas 2 `
   --max-replicas 5
 ```
@@ -784,15 +784,15 @@ az containerapp update `
 ```
 # Update secret
 az containerapp update `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg `
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP> `
   --set-env-vars DATABRICKS_TOKEN=secretref:databricks-token `
   --replace-secrets databricks-token="<new-token>"
 
 # Restart to apply
 az containerapp revision restart `
-  --name databricks-mcp `
-  --resource-group aks01day2-rg
+  --name <CONTAINER_APP_NAME> `
+  --resource-group <RESOURCE_GROUP>
 ```
 
 ---
@@ -803,7 +803,7 @@ az containerapp revision restart `
 
 ```
 # Check logs for errors
-az containerapp logs show --name databricks-mcp --resource-group aks01day2-rg --tail 100
+az containerapp logs show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --tail 100
 
 # Common issues:
 # - Missing environment variables (check secrets)
@@ -837,16 +837,16 @@ az role assignment create --assignee $principalId --role AcrPull --scope $acrId
 
 ```
 # Delete container app
-az containerapp delete --name databricks-mcp --resource-group aks01day2-rg --yes
+az containerapp delete --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --yes
 
 # Delete environment
-az containerapp env delete --name databricks-mcp-env --resource-group aks01day2-rg --yes
+az containerapp env delete --name <CONTAINER_APP_ENV> --resource-group <RESOURCE_GROUP> --yes
 
 # Delete managed identity
-az identity delete --name databricks-mcp-identity --resource-group aks01day2-rg
+az identity delete --name <MANAGED_IDENTITY_NAME> --resource-group <RESOURCE_GROUP>
 
 # Delete image from ACR
-az acr repository delete --name aks01day2acr --repository databricks-mcp --yes
+az acr repository delete --name <ACR_NAME> --repository <IMAGE_NAME> --yes
 ```
 
 ---
@@ -1023,12 +1023,12 @@ pip install requests
 
 **Endpoint Configuration:**
 ```python
-base_url = "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io"
+base_url = "https://<CONTAINER_APP_FQDN>"
 warehouse_id = "<DATABRICKS_WAREHOUSE_ID>"  # Your SQL warehouse ID
 ```
 
 **Endpoint Information:**
-- **Base URL**: `https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io`
+- **Base URL**: `https://<CONTAINER_APP_FQDN>`
 - **MCP Endpoint**: `/mcp`
 - **Transport**: Streamable HTTP (SSE)
 - **Protocol**: MCP 2024-11-05
@@ -1042,13 +1042,13 @@ warehouse_id = "<DATABRICKS_WAREHOUSE_ID>"  # Your SQL warehouse ID
 **Troubleshooting:**
 ```bash
 # Verify endpoint is accessible
-curl -I https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io
+curl -I https://<CONTAINER_APP_FQDN>
 
 # Check Azure Container App status
-az containerapp show --name databricks-mcp --resource-group aks01day2-rg --query "properties.runningStatus"
+az containerapp show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --query "properties.runningStatus"
 
 # View real-time logs
-az containerapp logs show --name databricks-mcp --resource-group aks01day2-rg --follow
+az containerapp logs show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --follow
 ```
 
 **Common Issues:**
@@ -1069,10 +1069,10 @@ az containerapp logs show --name databricks-mcp --resource-group aks01day2-rg --
 **Troubleshooting:**
 ```bash
 # Check environment variables
-az containerapp show --name databricks-mcp --resource-group aks01day2-rg --query "properties.template.containers[0].env"
+az containerapp show --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --query "properties.template.containers[0].env"
 
 # Verify secrets exist
-az containerapp secret list --name databricks-mcp --resource-group aks01day2-rg
+az containerapp secret list --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP>
 ```
 
 #### Tool Errors
@@ -1105,7 +1105,7 @@ import json
 
 # 1. Initialize session
 init_response = requests.post(
-    "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp",
+    "https://<CONTAINER_APP_FQDN>/mcp",
     headers={
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream"
@@ -1127,7 +1127,7 @@ print(f"Session ID: {session_id}")
 
 # 2. List available tools
 tools_response = requests.post(
-    "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp",
+    "https://<CONTAINER_APP_FQDN>/mcp",
     headers={
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
@@ -1143,7 +1143,7 @@ tools_response = requests.post(
 
 # 3. Call a tool
 call_response = requests.post(
-    "https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp",
+    "https://<CONTAINER_APP_FQDN>/mcp",
     headers={
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
@@ -1249,11 +1249,11 @@ All tests are located in `zDatabricksMCP/` directory.
 
 **Live Deployment:**
 
-*   **Container App**: `databricks-mcp`
-*   **Endpoint**: `https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp`
+*   **Container App**: `<CONTAINER_APP_NAME>`
+*   **Endpoint**: `https://<CONTAINER_APP_FQDN>/mcp`
 *   **Status**: ✅ Running
-*   **Revision**: `databricks-mcp--0000004`
-*   **Image**: `aks01day2acr.azurecr.io/databricks-mcp:final` (digest: `sha256:bebce83...`)
+*   **Revision**: `<CONTAINER_APP_REVISION>`
+*   **Image**: `<ACR_LOGIN_SERVER>/<IMAGE_NAME>:<IMAGE_TAG>` (digest: `sha256:<IMAGE_DIGEST>`)
 *   **Tools Available**: 38
 *   **Session Management**: ✅ Working
 *   **DNS Rebinding Protection**: ✅ Disabled (for ACA proxy)
@@ -1282,17 +1282,17 @@ All tests are located in `zDatabricksMCP/` directory.
 **Quick Access URLs:**
 
 ```
-MCP Endpoint:        https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io/mcp
-Container App:       https://databricks-mcp.icysand-20762073.centralus.azurecontainerapps.io
+MCP Endpoint:        https://<CONTAINER_APP_FQDN>/mcp
+Container App:       https://<CONTAINER_APP_FQDN>
 Databricks Workspace: https://<DATABRICKS_HOST>
 ```
 
 **Configured Resources:**
 
-*   Resource Group: `aks01day2-rg`
-*   Container App Environment: `databricks-mcp-env`
-*   Managed Identity: `databricks-mcp-identity`
-*   Registry: `aks01day2acr.azurecr.io`
+*   Resource Group: `<RESOURCE_GROUP>`
+*   Container App Environment: `<CONTAINER_APP_ENV>`
+*   Managed Identity: `<MANAGED_IDENTITY_NAME>`
+*   Registry: `<ACR_LOGIN_SERVER>`
 *   CPU: 0.5 cores, Memory: 1.0 Gi
 *   Min Replicas: 1, Max Replicas: 3
 
