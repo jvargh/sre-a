@@ -61,7 +61,7 @@ The Azure MCP server runs locally via Node.js in **Stdio mode**, communicating w
 **Scheduling Options:**
 
 *   **Ad-hoc**: Run on-demand via agent prompt
-*   **Scheduled**: Azure Logic Apps or Azure Functions trigger (daily/weekly compliance scans)
+*   **Scheduled**: Use Azure SRE Agent's built-in task scheduler (daily/weekly/monthly compliance scans)
 *   **Event-driven**: Trigger on resource group changes or policy violations
 
 ---
@@ -109,7 +109,7 @@ Identify gaps, flag critical findings, and provide remediation steps.
 
 **Integrate with Operations**:
 
-*   Schedule daily compliance scans via Azure Logic Apps
+*   Schedule daily compliance scans via Azure SRE Agent's scheduled tasks
 *   Trigger assessments on resource deployments
 *   Export findings to Azure DevOps or ServiceNow for ticketing
 
@@ -737,29 +737,14 @@ The assessment workflow discovered **8 critical findings and 11 warnings** acros
 
 ## Scheduling Compliance Scans
 
-### Option 1: Ad-Hoc Execution
+Azure SRE Agent includes built-in task scheduling. From the **Scheduled tasks** menu, create a new task specifying:
 
-Run compliance checks on-demand via agent prompt when needed.
+- **Frequency**: Daily, Weekly, or Monthly
+- **Time**: When to run scans
+- **Scope**: Target resource group or subscription
+- **Autonomy**: Autonomous (auto-remediate) or Review (approval required)
 
-### Option 2: Scheduled (Recommended)
-
-Azure SRE Agent has built-in scheduled task management. Create a new scheduled task with:
-
-**Configuration:**
-- **Frequency**: Daily, Weekly, Monthly
-- **Time of Day**: Set scan execution time (e.g., 5:15 PM)
-- **Start Date**: When to begin scheduled scans
-- **Task Details**: Specify the compliance assessment scope (resource group, subscription)
-- **Response Subagent**: Select the Azure SRE Agent for compliance scanning
-- **Autonomy Level**: Choose between Autonomous (auto-remediate) or Review (approval required)
-
-**Example Setup:**
-- Daily compliance scan at 8:00 AM
-- Scope: Resource group "sre-westus2-rg"
-- Autonomy: Review mode (agent requests approval before remediation)
-- Run limit: No limit (continuous scanning enabled)
-
-The agent automatically discovers resources, assesses WAF compliance, and either executes or flags remediation based on your autonomy settings.
+The agent runs on schedule, discovers resources, assesses WAF compliance, and executes or flags remediation based on your settings.
 
 ---
 
