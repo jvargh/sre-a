@@ -10,7 +10,7 @@ This workflow is broken. Enter the **Azure SRE Agent**: an AI-powered compliance
 
 **How it works:**
 
-The agent leverages four capabilities to transform Azure governance:
+The agent leverages these capabilities to transform Azure governance:
 
 **Autonomous Resource Discovery via MCP** - Azure MCP (Model Context Protocol) server exposes Azure Resource Graph and ARM APIs as discoverable tools. The agent automatically inventories all resources across subscriptions with metadata (types, locations, tags, security settings) in seconds.
 
@@ -19,8 +19,6 @@ The agent leverages four capabilities to transform Azure governance:
 **Org Best Practices Cross-Check** - The agent references your organization's compliance standards (stored in knowledge base as `org-practices.md`) to escalate WAF findings into actionable org policies. A Security policy violation becomes a critical finding. A cost optimization recommendation becomes a warning.
 
 **Automated Remediation Codegen** - For every finding, the agent generates exact Azure CLI commands, Terraform snippets, and Portal steps with impact quantification (risk reduction, cost savings, compliance improvement).
-
-**Real-world example from the image:** The assessment discovered 8 critical findings and 11 warnings across SQL, AKS, Storage, VMs, and NSGs. Each came with remediation commands and prioritized timelines. Total time: **6 minutes**. Manual review would take 4-6 hours.
 
 ---
 
@@ -697,6 +695,12 @@ Impact:
 2.  Integrate findings with Azure DevOps for backlog tracking
 3.  Implement GitOps for IaC enforcement (Terraform, Bicep)
 4.  Train teams on security best practices and compliance requirements
+
+---
+
+## Real-World Results
+
+The assessment workflow discovered **8 critical findings and 11 warnings** across SQL, AKS, Storage, VMs, and NSGs. Each came with remediation commands and prioritized timelines. **Total time: 6 minutes**. Manual review would take 4-6 hours.
 
 ---
 
