@@ -1,0 +1,304 @@
+api_version: azuresre.ai/v1
+kind: AgentConfiguration
+spec:
+  name: Azure_WAF_Compliance_Agent
+  system_prompt: >
+    Goal: Validate Azure resources against Microsoft's Azure Well-Architected Framework (5 pillars)
+    combined with organizational best practices from org-practices.md in the knowledge base.
+
+    Role: You are an Azure Well-Architected Framework (WAF) Compliance Agent.
+
+    CRITICAL WORKFLOW (follow exactly):
+
+    Step 1 - Resource Discovery (always run first):
+      Use Azure MCP tools to discover all resources in the subscription/resource group.
+      Do NOT ask for resource IDs—auto-discover using list commands (VMs, storage, NSGs, Key Vaults, etc.).
+
+    Step 2 - Pillar Assessment (for each of 5 pillars):
+      Reliability: Availability, disaster recovery, backup, monitoring, health checks
+      Security: NSGs, identity/RBAC, encryption, Key Vault, audit logging, threat detection
+      Cost Optimization: Right-sizing, idle resources, tagging, Reserved Instances, storage tiers
+      Operational Excellence: IaC, monitoring, logging, incident response, runbooks
+      Performance: Compute scaling, network latency, storage throughput, caching, DB optimization
+
+      For each pillar:
+      - Fetch WAF best practices using Azure MCP
+      - Evaluate actual resource configuration against best practice
+      - Rate as PASS (compliant) / FAIL (non-compliant) / PARTIAL (incomplete data) / UNKNOWN (not checkable)
+      - Identify specific gaps with evidence
+
+    Step 3 - Org Compliance Cross-Check:
+      Read org-practices.md. For each pillar finding, check if it intersects with org requirement.
+      Map severity: Critical (🔴) / Warning (🟡) / Info (🔵).
+      Escalate CRITICAL findings immediately.
+
+    Step 4 - Gap Analysis & Remediation:
+      For each gap: Generate finding, evidence, severity, exact remediation commands, impact quantification.
+      Provide copy-paste CLI commands, Terraform, or Portal steps.
+      Quantify impact: cost savings, risk reduction, uptime/performance gains.
+
+    Execution rules:
+      - Use Azure MCP tools exclusively; do NOT ask for resource IDs
+      - Run discovery tools in parallel to minimize latency
+      - If MCP tool fails: log error, mark check as PARTIAL, continue with other checks
+      - Do NOT ask clarifying questions; default to validating ALL discovered resources
+
+    Output format (use markdown with tables):
+      1) Executive Summary: % compliant per pillar, critical findings count, warning count
+      2) Pillar-by-pillar detailed findings: PASS/FAIL/PARTIAL/UNKNOWN with evidence
+      3) Compliance summary table: All findings by severity
+      4) Detailed remediation: Exact copy-paste commands per gap
+      5) Remediation roadmap: Immediate / short-term / medium-term / long-term
+      6) References: Links to WAF docs + org-practices.md sections
+
+    Response constraints:
+      - Provide one complete report and stop.
+      - Do not offer optional additional analyses or follow-up questions.
+      - Base all recommendations on Azure WAF + org-practices.md.
+      - Quantify impact (cost, risk, performance) where possible.
+
+    Example findings:
+      PASS: "VM right-sized; CPU avg 65%, Memory 58% (Reliability pillar)"
+      FAIL: "NSG allows SSH (22) from 0.0.0.0/0; org-practices.md requires restricted source"
+      PARTIAL: "Backup configured but backup tests not documented; cannot confirm recovery time"
+  mcp_tools:
+    - AzureMCPServer_acr_registry_list
+    - AzureMCPServer_acr_registry_repository_list
+    - AzureMCPServer_advisor_recommendation_list
+    - AzureMCPServer_aks_cluster_get
+    - AzureMCPServer_aks_nodepool_get
+    - AzureMCPServer_appconfig_account_list
+    - AzureMCPServer_appconfig_kv_delete
+    - AzureMCPServer_appconfig_kv_get
+    - AzureMCPServer_appconfig_kv_lock_set
+    - AzureMCPServer_appconfig_kv_set
+    - AzureMCPServer_applens_resource_diagnose
+    - AzureMCPServer_applicationinsights_recommendation_list
+    - AzureMCPServer_appservice_database_add
+    - AzureMCPServer_azuremigrate_platformlandingzone_getguidance
+    - AzureMCPServer_azuremigrate_platformlandingzone_request
+    - AzureMCPServer_azureterraformbestpractices_get
+    - AzureMCPServer_bicepschema_get
+    - AzureMCPServer_cloudarchitect_design
+    - AzureMCPServer_communication_email_send
+    - AzureMCPServer_communication_sms_send
+    - AzureMCPServer_compute_vm_get
+    - AzureMCPServer_compute_vmss_get
+    - AzureMCPServer_confidentialledger_entries_append
+    - AzureMCPServer_confidentialledger_entries_get
+    - AzureMCPServer_cosmos_account_list
+    - AzureMCPServer_cosmos_database_container_item_query
+    - AzureMCPServer_cosmos_database_container_list
+    - AzureMCPServer_cosmos_database_list
+    - AzureMCPServer_datadog_monitoredresources_list
+    - AzureMCPServer_deploy_app_logs_get
+    - AzureMCPServer_deploy_architecture_diagram_generate
+    - AzureMCPServer_deploy_iac_rules_get
+    - AzureMCPServer_deploy_pipeline_guidance_get
+    - AzureMCPServer_deploy_plan_get
+    - AzureMCPServer_eventgrid_events_publish
+    - AzureMCPServer_eventgrid_subscription_list
+    - AzureMCPServer_eventgrid_topic_list
+    - AzureMCPServer_eventhubs_eventhub_consumergroup_delete
+    - AzureMCPServer_eventhubs_eventhub_consumergroup_get
+    - AzureMCPServer_eventhubs_eventhub_consumergroup_update
+    - AzureMCPServer_eventhubs_eventhub_delete
+    - AzureMCPServer_eventhubs_eventhub_get
+    - AzureMCPServer_eventhubs_eventhub_update
+    - AzureMCPServer_eventhubs_namespace_delete
+    - AzureMCPServer_eventhubs_namespace_get
+    - AzureMCPServer_eventhubs_namespace_update
+    - AzureMCPServer_extension_azqr
+    - AzureMCPServer_extension_cli_generate
+    - AzureMCPServer_extension_cli_install
+    - AzureMCPServer_fileshares_fileshare_check-name-availability
+    - AzureMCPServer_fileshares_fileshare_create
+    - AzureMCPServer_fileshares_fileshare_delete
+    - AzureMCPServer_fileshares_fileshare_get
+    - AzureMCPServer_fileshares_fileshare_snapshot_create
+    - AzureMCPServer_fileshares_fileshare_snapshot_delete
+    - AzureMCPServer_fileshares_fileshare_snapshot_get
+    - AzureMCPServer_fileshares_fileshare_snapshot_update
+    - AzureMCPServer_fileshares_fileshare_update
+    - AzureMCPServer_fileshares_limits
+    - AzureMCPServer_fileshares_rec
+    - AzureMCPServer_fileshares_usage
+    - AzureMCPServer_foundry_agents_connect
+    - AzureMCPServer_foundry_agents_create
+    - AzureMCPServer_foundry_agents_evaluate
+    - AzureMCPServer_foundry_agents_get-sdk-sample
+    - AzureMCPServer_foundry_agents_list
+    - AzureMCPServer_foundry_agents_query-and-evaluate
+    - AzureMCPServer_foundry_knowledge_index_list
+    - AzureMCPServer_foundry_knowledge_index_schema
+    - AzureMCPServer_foundry_models_deploy
+    - AzureMCPServer_foundry_models_deployments_list
+    - AzureMCPServer_foundry_models_list
+    - AzureMCPServer_foundry_openai_chat-completions-create
+    - AzureMCPServer_foundry_openai_create-completion
+    - AzureMCPServer_foundry_openai_embeddings-create
+    - AzureMCPServer_foundry_openai_models-list
+    - AzureMCPServer_foundry_resource_get
+    - AzureMCPServer_foundry_threads_create
+    - AzureMCPServer_foundry_threads_get-messages
+    - AzureMCPServer_foundry_threads_list
+    - AzureMCPServer_functionapp_get
+    - AzureMCPServer_get_azure_bestpractices_ai_app
+    - AzureMCPServer_get_azure_bestpractices_get
+    - AzureMCPServer_grafana_list
+    - AzureMCPServer_group_list
+    - AzureMCPServer_keyvault_admin_settings_get
+    - AzureMCPServer_keyvault_certificate_create
+    - AzureMCPServer_keyvault_certificate_get
+    - AzureMCPServer_keyvault_certificate_import
+    - AzureMCPServer_keyvault_certificate_list
+    - AzureMCPServer_keyvault_key_create
+    - AzureMCPServer_keyvault_key_get
+    - AzureMCPServer_keyvault_key_list
+    - AzureMCPServer_keyvault_secret_create
+    - AzureMCPServer_keyvault_secret_get
+    - AzureMCPServer_keyvault_secret_list
+    - AzureMCPServer_kusto_cluster_get
+    - AzureMCPServer_kusto_cluster_list
+    - AzureMCPServer_kusto_database_list
+    - AzureMCPServer_kusto_query
+    - AzureMCPServer_kusto_sample
+    - AzureMCPServer_kusto_table_list
+    - AzureMCPServer_kusto_table_schema
+    - AzureMCPServer_loadtesting_test_create
+    - AzureMCPServer_loadtesting_test_get
+    - AzureMCPServer_loadtesting_testresource_create
+    - AzureMCPServer_loadtesting_testresource_list
+    - AzureMCPServer_loadtesting_testrun_create
+    - AzureMCPServer_loadtesting_testrun_get
+    - AzureMCPServer_loadtesting_testrun_list
+    - AzureMCPServer_loadtesting_testrun_update
+    - AzureMCPServer_managedlustre_fs_blob_autoexport_cancel
+    - AzureMCPServer_managedlustre_fs_blob_autoexport_create
+    - AzureMCPServer_managedlustre_fs_blob_autoexport_delete
+    - AzureMCPServer_managedlustre_fs_blob_autoexport_get
+    - AzureMCPServer_managedlustre_fs_blob_autoimport_cancel
+    - AzureMCPServer_managedlustre_fs_blob_autoimport_create
+    - AzureMCPServer_managedlustre_fs_blob_autoimport_delete
+    - AzureMCPServer_managedlustre_fs_blob_autoimport_get
+    - AzureMCPServer_managedlustre_fs_blob_import_cancel
+    - AzureMCPServer_managedlustre_fs_blob_import_create
+    - AzureMCPServer_managedlustre_fs_blob_import_delete
+    - AzureMCPServer_managedlustre_fs_blob_import_get
+    - AzureMCPServer_managedlustre_fs_create
+    - AzureMCPServer_managedlustre_fs_list
+    - AzureMCPServer_managedlustre_fs_sku_get
+    - AzureMCPServer_managedlustre_fs_subnetsize_ask
+    - AzureMCPServer_managedlustre_fs_subnetsize_validate
+    - AzureMCPServer_managedlustre_fs_update
+    - AzureMCPServer_marketplace_product_get
+    - AzureMCPServer_marketplace_product_list
+    - AzureMCPServer_microsoft_code_sample_search
+    - AzureMCPServer_microsoft_docs_fetch
+    - AzureMCPServer_microsoft_docs_search
+    - AzureMCPServer_monitor_activitylog_list
+    - AzureMCPServer_monitor_healthmodels_entity_get
+    - AzureMCPServer_monitor_metrics_definitions
+    - AzureMCPServer_monitor_metrics_query
+    - AzureMCPServer_monitor_resource_log_query
+    - AzureMCPServer_monitor_table_list
+    - AzureMCPServer_monitor_table_type_list
+    - AzureMCPServer_monitor_webtests_create
+    - AzureMCPServer_monitor_webtests_get
+    - AzureMCPServer_monitor_webtests_list
+    - AzureMCPServer_monitor_webtests_update
+    - AzureMCPServer_monitor_workspace_list
+    - AzureMCPServer_monitor_workspace_log_query
+    - AzureMCPServer_mysql_database_list
+    - AzureMCPServer_mysql_database_query
+    - AzureMCPServer_mysql_server_config_get
+    - AzureMCPServer_mysql_server_list
+    - AzureMCPServer_mysql_server_param_get
+    - AzureMCPServer_mysql_server_param_set
+    - AzureMCPServer_mysql_table_list
+    - AzureMCPServer_mysql_table_schema_get
+    - AzureMCPServer_policy_assignment_list
+    - AzureMCPServer_postgres_database_list
+    - AzureMCPServer_postgres_database_query
+    - AzureMCPServer_postgres_server_config_get
+    - AzureMCPServer_postgres_server_list
+    - AzureMCPServer_postgres_server_param_get
+    - AzureMCPServer_postgres_server_param_set
+    - AzureMCPServer_postgres_table_list
+    - AzureMCPServer_postgres_table_schema_get
+    - AzureMCPServer_pricing_get
+    - AzureMCPServer_quota_region_availability_list
+    - AzureMCPServer_quota_usage_check
+    - AzureMCPServer_redis_create
+    - AzureMCPServer_redis_list
+    - AzureMCPServer_resourcehealth_availability-status_get
+    - AzureMCPServer_resourcehealth_availability-status_list
+    - AzureMCPServer_resourcehealth_health-events_list
+    - AzureMCPServer_role_assignment_list
+    - AzureMCPServer_search_index_get
+    - AzureMCPServer_search_index_query
+    - AzureMCPServer_search_knowledge_base_get
+    - AzureMCPServer_search_knowledge_base_retrieve
+    - AzureMCPServer_search_knowledge_source_get
+    - AzureMCPServer_search_service_list
+    - AzureMCPServer_servicebus_queue_details
+    - AzureMCPServer_servicebus_topic_details
+    - AzureMCPServer_servicebus_topic_subscription_details
+    - AzureMCPServer_signalr_runtime_get
+    - AzureMCPServer_speech_stt_recognize
+    - AzureMCPServer_speech_tts_synthesize
+    - AzureMCPServer_sql_db_create
+    - AzureMCPServer_sql_db_delete
+    - AzureMCPServer_sql_db_list
+    - AzureMCPServer_sql_db_rename
+    - AzureMCPServer_sql_db_show
+    - AzureMCPServer_sql_db_update
+    - AzureMCPServer_sql_elastic-pool_list
+    - AzureMCPServer_sql_server_create
+    - AzureMCPServer_sql_server_delete
+    - AzureMCPServer_sql_server_entra-admin_list
+    - AzureMCPServer_sql_server_firewall-rule_create
+    - AzureMCPServer_sql_server_firewall-rule_delete
+    - AzureMCPServer_sql_server_firewall-rule_list
+    - AzureMCPServer_sql_server_list
+    - AzureMCPServer_sql_server_show
+    - AzureMCPServer_storage_account_create
+    - AzureMCPServer_storage_account_get
+    - AzureMCPServer_storage_blob_container_create
+    - AzureMCPServer_storage_blob_container_get
+    - AzureMCPServer_storage_blob_get
+    - AzureMCPServer_storage_blob_upload
+    - AzureMCPServer_storage_table_list
+    - AzureMCPServer_storagesync_cloudendpoint_changedetection
+    - AzureMCPServer_storagesync_cloudendpoint_create
+    - AzureMCPServer_storagesync_cloudendpoint_delete
+    - AzureMCPServer_storagesync_cloudendpoint_get
+    - AzureMCPServer_storagesync_registeredserver_get
+    - AzureMCPServer_storagesync_registeredserver_unregister
+    - AzureMCPServer_storagesync_registeredserver_update
+    - AzureMCPServer_storagesync_serverendpoint_create
+    - AzureMCPServer_storagesync_serverendpoint_delete
+    - AzureMCPServer_storagesync_serverendpoint_get
+    - AzureMCPServer_storagesync_serverendpoint_update
+    - AzureMCPServer_storagesync_service_create
+    - AzureMCPServer_storagesync_service_delete
+    - AzureMCPServer_storagesync_service_get
+    - AzureMCPServer_storagesync_service_update
+    - AzureMCPServer_storagesync_syncgroup_create
+    - AzureMCPServer_storagesync_syncgroup_delete
+    - AzureMCPServer_storagesync_syncgroup_get
+    - AzureMCPServer_subscription_list
+    - AzureMCPServer_virtualdesktop_hostpool_host_list
+    - AzureMCPServer_virtualdesktop_hostpool_host_user-list
+    - AzureMCPServer_virtualdesktop_hostpool_list
+    - AzureMCPServer_workbooks_create
+    - AzureMCPServer_workbooks_delete
+    - AzureMCPServer_workbooks_list
+    - AzureMCPServer_workbooks_show
+    - AzureMCPServer_workbooks_update
+  handoff_description: >-
+    Use this agent when you need automated discovery and compliance validation of Azure resources
+    against the Azure Well-Architected Framework and your org’s practices, producing evidence-backed
+    findings and exact remediation steps. 
+  agent_type: Autonomous
+  enable_skills: false
