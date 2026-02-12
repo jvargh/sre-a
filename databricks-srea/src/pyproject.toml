@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "databricks-mcp-server"
+version = "0.4.4"
+description = "A Model Context Protocol (MCP) server for Databricks"
+authors = []
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["databricks", "mcp", "model-context-protocol", "llm", "ai", "cursor"]
+homepage = "https://github.com/markov-kernel/databricks-mcp"
+repository = "https://github.com/markov-kernel/databricks-mcp"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "httpx",
+    "databricks-sdk",
+]
+
+[project.optional-dependencies]
+cli = [
+    "click",
+]
+dev = [
+    "black",
+    "pylint",
+    "pytest",
+    "pytest-asyncio",
+    "fastapi",
+    "anyio",
+]
+
+[project.scripts]
+databricks-mcp-server = "databricks_mcp.server.databricks_mcp_server:main"
+databricks-mcp = "databricks_mcp.cli.commands:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["databricks_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short" 
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+    "twine>=6.1.0",
+]
