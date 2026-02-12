@@ -743,42 +743,23 @@ Run compliance checks on-demand via agent prompt when needed.
 
 ### Option 2: Scheduled (Recommended)
 
-**Azure Logic Apps:**
+Azure SRE Agent has built-in scheduled task management. Create a new scheduled task with:
 
-```
-{
-  "recurrence": {
-    "frequency": "Week",
-    "interval": 1,
-    "schedule": {
-      "weekDays": ["Monday"],
-      "hours": [8]
-    }
-  },
-  "action": {
-    "type": "Http",
-    "inputs": {
-      "method": "POST",
-      "uri": "https://<agent-endpoint>/trigger-compliance-scan",
-      "body": {
-        "resourceGroup": "sre-demo2-rg",
-        "subscriptionId": "<subscription-id>"
-      }
-    }
-  }
-}
-```
+**Configuration:**
+- **Frequency**: Daily, Weekly, Monthly
+- **Time of Day**: Set scan execution time (e.g., 5:15 PM)
+- **Start Date**: When to begin scheduled scans
+- **Task Details**: Specify the compliance assessment scope (resource group, subscription)
+- **Response Subagent**: Select the Azure SRE Agent for compliance scanning
+- **Autonomy Level**: Choose between Autonomous (auto-remediate) or Review (approval required)
 
-**Azure Functions (Timer Trigger):**
+**Example Setup:**
+- Daily compliance scan at 8:00 AM
+- Scope: Resource group "sre-westus2-rg"
+- Autonomy: Review mode (agent requests approval before remediation)
+- Run limit: No limit (continuous scanning enabled)
 
-```python
-import azure.functions as func
-
-def main(mytimer: func.TimerRequest) -> None:
-    # Trigger agent compliance scan
-    # Send results to Log Analytics or ServiceNow
-    pass
-```
+The agent automatically discovers resources, assesses WAF compliance, and either executes or flags remediation based on your autonomy settings.
 
 ---
 
