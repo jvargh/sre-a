@@ -70,7 +70,7 @@ This is safe because ACA provides infrastructure-level isolation.
 
 ## Prerequisites Checklist
 
-*   ✅ Local src folder validated at: `C:\Users\varghesejoji\Desktop\SRE-A\zDatabricksMCP\src`
+*   ✅ Local src folder validated at: `src/`
 *   ✅ Pre-Docker validation completed (all 38 tools working via streamable HTTP)
 *   ✅ Docker Desktop running
 *   Azure CLI logged in (`az login`)
@@ -105,7 +105,7 @@ Public HTTPS Endpoint (for Azure SRE Agent integration)
 ### 1.1 Check Src Contents
 
 ```
-ls C:\Users\varghesejoji\Desktop\SRE-A\zDatabricksMCP\src
+ls src
 ```
 
 **Expected Files/Folders:**
@@ -122,7 +122,7 @@ tests/                (test files)
 ### 1.2 Verify pyproject.toml Entry Points
 
 ```
-cat C:\Users\varghesejoji\Desktop\SRE-A\zDatabricksMCP\src\pyproject.toml | Select-String "scripts"
+cat src\pyproject.toml | Select-String "scripts"
 ```
 
 **Expected Output:**
@@ -139,7 +139,7 @@ databricks-mcp-server = "databricks_mcp.server.databricks_mcp_server:main"
 ### 2.1 Navigate to Src Directory
 
 ```
-cd C:\Users\varghesejoji\Desktop\SRE-A\zDatabricksMCP\src
+cd src
 ```
 
 **Important**: The Dockerfile is now in the `src/` folder itself.
