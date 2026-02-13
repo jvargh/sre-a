@@ -50,9 +50,9 @@ This guide walks you through a complete end-to-end deployment of the Databricks 
 │  │   - MCP Protocol Handler (/mcp endpoint)                  │  │
 │  │   - 38 Databricks Tools (clusters, jobs, SQL, Unity)      │  │
 │  └───────────────────────────────────────────────────────────┘  │
-│                          │                                       │
-│                          │ Pulls image via Managed Identity      │
-│                          ▼                                       │
+│                          │                                      │
+│                          │ Pulls image via Managed Identity     │
+│                          ▼                                      │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │   Azure Container Registry (ACR)                          │  │
 │  │   - Stores databricks-mcp:latest and :final images        │  │
