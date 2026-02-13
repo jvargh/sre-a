@@ -8,6 +8,7 @@
 
 ## Table of Contents
 
+*   [Deployment Overview](#deployment-overview)
 *   [Prerequisites](#prerequisites)
 *   [Validation Complete](#-validation-complete-steps-2-8)
 *   [Step 1: Create Managed Identity (Required)](#step-1-create-managed-identity-required)
@@ -23,6 +24,100 @@
 *   [Step 11: Create Subagent in Azure SRE Agent UI](#step-11-create-subagent-in-azure-sre-agent-ui)
 *   [Troubleshooting](#troubleshooting)
 *   [Reference](#reference)
+
+---
+
+## Deployment Overview
+
+This guide walks you through a complete end-to-end deployment of the Databricks MCP server, from local development to production Azure infrastructure. Understanding the architecture before you begin will help you troubleshoot issues and make informed decisions during deployment.
+
+### What You're Building
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Azure SRE Agent                             │
+│              (Orchestrates SRE workflows)                       │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         │ HTTPS + MCP Protocol
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│          Azure Container Apps (Production Runtime)              │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │   Databricks MCP Container                                │  │
+│  │   - HTTP Server (Port 8000)                               │  │
+│  │   - MCP Protocol Handler (/mcp endpoint)                  │  │
+│  │   - 38 Databricks Tools (clusters, jobs, SQL, Unity)      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                          │                                       │
+│                          │ Pulls image via Managed Identity      │
+│                          ▼                                       │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │   Azure Container Registry (ACR)                          │  │
+│  │   - Stores databricks-mcp:latest and :final images        │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                         │
+                         │ Databricks REST APIs
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Databricks Workspace                          │
+│   - Clusters, Jobs, Notebooks, Unity Catalog, SQL Warehouses    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Deployment Pipeline
+
+**Local Development & Testing (Steps 2-4)**  
+Build and test the Docker container on your machine to validate functionality before cloud deployment. This catches configuration issues early and lets you iterate quickly.
+
+**Azure Container Registry (Step 5)**  
+Push the validated Docker image to ACR, Azure's private container registry. This acts as your production image repository with enterprise-grade security and geo-replication.
+
+**Azure Container Apps Deployment (Step 6)**  
+Deploy the MCP server as a managed container with automatic scaling, health monitoring, and HTTPS ingress. Container Apps handles infrastructure management (patching, scaling, networking) so you focus on the MCP logic.
+
+**Authentication & Security (Step 1 + 6)**  
+Managed Identity eliminates credential storage by granting the Container App permission to pull images from ACR and the MCP server permission to call Databricks APIs.
+
+**Validation & Integration (Steps 7-11)**  
+Test the live endpoint, validate MCP protocol responses, and connect the Azure SRE Agent to orchestrate Databricks operations through natural language prompts.
+
+### Key Components
+
+**Databricks MCP Server**: Python application (`entry_http.py`) that exposes Databricks workspace operations as MCP tools. Runs as HTTP server on port 8000 with `/mcp` endpoint handling JSON-RPC 2.0 requests.
+
+**Azure Container Registry (ACR)**: Private Docker registry storing your MCP container images with role-based access control and vulnerability scanning.
+
+**Azure Container Apps**: Serverless container platform hosting the MCP server with built-in scaling (0-N replicas), managed certificates, and environment variable/secret injection.
+
+**Managed Identity**: Azure AD identity assigned to Container App enabling passwordless authentication to ACR (image pull) and Databricks workspace (API access).
+
+**Azure SRE Agent**: AI-powered operations assistant that discovers and calls MCP tools to execute complex Databricks workflows autonomously.
+
+### Why This Architecture?
+
+**Containerization**: Packages Python dependencies, MCP server code, and runtime into a single immutable artifact that works identically in development and production.
+
+**Azure Container Apps**: Eliminates Kubernetes complexity while providing enterprise container orchestration (scaling, health checks, secrets management, ingress).
+
+**Managed Identity**: Replaces service principal credentials with Azure AD-managed identities that auto-rotate and never expire, eliminating credential sprawl.
+
+**MCP Protocol**: Standardized interface for AI agents to discover and invoke tools, enabling the SRE Agent to orchestrate Databricks operations without custom integration code.
+
+### What Happens at Runtime?
+
+1. Azure SRE Agent receives user prompt: "List all Databricks clusters with high memory usage"
+2. Agent calls `https://<container-app-url>/mcp` with MCP `initialize` request
+3. Container App authenticates via Managed Identity and returns list of 38 available tools
+4. Agent selects `list_clusters` tool and invokes it via MCP `tools/call` request
+5. MCP server calls Databricks REST API using workspace token (stored as Container App secret)
+6. Databricks returns cluster list, MCP server filters by memory usage, responds to agent
+7. Agent formats findings and presents actionable insights to user
+
+---
 
 ## Prerequisites
 
