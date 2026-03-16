@@ -51,6 +51,13 @@ This repository includes:
 - Reactive incident response with root cause analysis
 - Real-world examples and operational impact metrics
 
+**[BLOG_POST](https://techcommunity.microsoft.com/blog/appsonazureblog/azure-waf-compliance-with-mcp-driven-sre-agent/4494687)** - Azure WAF Compliance with MCP-Driven SRE Agent
+
+- Uses an AI-powered Azure SRE Agent with MCP to automatically discover Azure resources across subscriptions and inventory their configurations.
+- Evaluates each resource against the five Azure Well-Architected Framework pillars to produce a compliance summary with pass, fail, or partial results.
+- Generates actionable remediation steps such as Azure CLI commands, Terraform snippets, and portal guidance with quantified impact like risk reduction or cost savings.
+
+
 ### Quickstart
 
 ```bash
